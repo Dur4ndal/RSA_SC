@@ -1,10 +1,6 @@
 #!/usr/bin/python
 
-#RSA generator
-#Rodrigo Mamedio Arrelaro & Eduardo Xavier
-#Seguranca computacional
-
-#Numeros com 1024 bits de tamanho possuem 308 digitos, logo precisamos escolher 2 inteiros primos de 308 digitos de tamanho cada
+from AES import aesKeyGenerator
 import sys, random, math
 
 listaprimos = []
@@ -12,6 +8,7 @@ listaprimos = []
 def nBitRandom(n):
         #Retorna um numero aleatorio, com tamanho de bits escolhido
         return(random.randrange(2**(n-1)+1, 2**n-1))
+
 
 
 def sieveEratosThenes(n):
@@ -29,6 +26,7 @@ def sieveEratosThenes(n):
                         listaprimos.append(p)
 
 
+
 def numeroPrimoLow(n):
         #Gera numeros primos candidatos para o teste de high priority, apos passar o de low priority
         while True:
@@ -40,6 +38,7 @@ def numeroPrimoLow(n):
                                 break
                 else:
                         return cand
+
 
 
 def highPriorityTest(n):
@@ -68,6 +67,7 @@ def highPriorityTest(n):
         return True
 
 
+
 def peqGenerator():
         #Calcula P e Q
         while True:
@@ -79,6 +79,7 @@ def peqGenerator():
                         return candidato
 
 
+
 def eCalculator(oDn):
         #Calcula o expoente E para Chave PUBLICA
         #Escolhe aleatoriamente um numero que seja 1 < E < o(N) e se o MDC(e,oDn) == 1, ele e um e valido. Pois ambos sao COPRIMOS !
@@ -87,6 +88,7 @@ def eCalculator(oDn):
                 if ((math.gcd(e,oDn)) == 1):
                         #print(e)
                         return e
+
 
 
 def dCalculator(e, oDn):
@@ -114,12 +116,14 @@ def dCalculator(e, oDn):
                 return d+oDn
 
 
+
 def cifracao(chave, textoplano):
         #Abertura da tupla
         key,n = chave
         #Conversao por a^b mod m
         cifra = [pow(ord(char),key,n) for char in textoplano]
         return cifra
+
 
 
 def decifracao(chave, textocifrado):
@@ -131,43 +135,43 @@ def decifracao(chave, textocifrado):
         return ''.join(textoplano)
 
 
-
+################################ main ####################################
 #Quantidade de primos desejados para o teste de baixo primo
-qtdPrimos = 1000
-sieveEratosThenes(qtdPrimos)
+#qtdPrimos = 1000
+#sieveEratosThenes(qtdPrimos)
 
 #Gerando chave publica ---> ARRUMAR AQUI PARA P e Q NUNCA SEREM IGUAIS !!!!!!!!!!!!!!!
-p = peqGenerator()
-q = peqGenerator()
+#p = peqGenerator()
+#q = peqGenerator()
 
-print("P escolhido foi")
-print(p)
-print("Q escolhido foi")
-print(q)
+#print("P escolhido foi")
+#print(p)
+#print("Q escolhido foi")
+#print(q)
 #Calculo de oDn
-n = p*q
+#n = p*q
 
 #print("N calculado foi:")
 #print(n)
 
-oDn = (p - 1)*(q - 1)
+#oDn = (p - 1)*(q - 1)
 
 #print("O(n) calculado foi:")
 #print(oDn)
 
 #Calculo da chave publica E
-e = eCalculator(oDn)
+#e = eCalculator(oDn)
 
-print("E calculado foi:")
-print(e)
+#print("E calculado foi:")
+#print(e)
 
 #Calculo da chave privada D
-d = dCalculator(e,oDn)
+#d = dCalculator(e,oDn)
 
 
 #Chave privada e publica (d,n) e (e,n), respectivamente
-chvPriv = (d,n)
-chvPubl = (e,n)
+#chvPriv = (d,n)
+#chvPubl = (e,n)
 
 #print(chvPriv,chvPubl)
 #print("A chave publica e:")
@@ -176,13 +180,15 @@ chvPubl = (e,n)
 #print("A chave privada e:")
 #print(chvPriv)
 
-msg = input("Digite a mensagem:\n")
-msgCifrada = cifracao(chvPubl,msg)
+#msg = input("Digite a mensagem:\n")
+#msgCifrada = cifracao(chvPubl,msg)
 
 #print(msgCifrada)
-print(" - Sua mensagem cifrada e:  ", ''.join(map(lambda x: str(x), msgCifrada)))
+#print(" - Sua mensagem cifrada e:  ", ''.join(map(lambda x: str(x), msgCifrada)))
 
-msgDecifrada = decifracao(chvPriv,msgCifrada)
+#msgDecifrada = decifracao(chvPriv,msgCifrada)
 
-print(msgDecifrada)
-                    
+#print(msgDecifrada)
+
+##################
+#print(aesKeyGenerator())
