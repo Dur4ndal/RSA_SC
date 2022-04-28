@@ -51,18 +51,20 @@ def conversaoLista2Byte(lista):
                         x = ord(x)
                         lista[i][j] = x
         return lista
-
+########################################################################################################
 def addRoundKey(listaChave,listaTexto):         #Bitwise XOR entre bytes
         def bitwise_xor_bytes(a, b):
-                result_int = int.from_bytes(a, byteorder="big") ^ int.from_bytes(b, byteorder="big")
-                return result_int.to_bytes(max(len(a), len(b)), byteorder="big")
+#               result_int = int.from_bytes(a, byteorder="big") ^ int.from_bytes(b, byteorder="big")
+                result_int = a ^ b
+#               return result_int.to_bytes(max(len(a), len(b)), byteorder="big")
+                return result_int
 
         for i in range(4):
                 for j in range(4):
                         listaTexto[i][j] = bitwise_xor_bytes(listaChave[i][j],listaTexto[i][j])
-                        listaTexto[i][j].hex()
+#                       listaTexto[i][j].hex()
         return listaTexto
-
+#######################################################################################################
 def subBytes(listaRodada):
         for i in range(4):                      #byte --> int --> Pega o index na lista --> add na lista como int --> byte
                 for j in range(4):
@@ -127,4 +129,11 @@ for i in range(4):
 for i in range(4):
         for j in range(4):
                 printHex(listaVideo[i][j])
-   
+print()
+#### ROUNDKEY ####
+listaKey = [[0xa0,0xfa,0xfe,0x17],[0x88,0x54,0x2c,0xb1],[0x23,0xa3,0x39,0x39],[0x2a,0x6c,0x76,0x05]]
+listaVideo = addRoundKey(listaKey,listaVideo)
+
+for i in range(4):
+        for j in range(4):
+                printHex(listaVideo[i][j])
