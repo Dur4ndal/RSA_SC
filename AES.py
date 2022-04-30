@@ -19,6 +19,9 @@ s_box = [0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
         0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
         0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16]
 
+rcon = [0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00,
+        0x10, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x1b, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00]
 
 def aesKeyGenerator():
         aesKeyLength = 16                       #16 bytes de tamanho = 128 bits de tamanho | 1 char = 1 byte
@@ -44,29 +47,26 @@ def matrixGenerator(chave):                     #Gera a matriz de 128 bits para 
 
 
 def conversaoLista2Byte(lista):
-        for i in range(4):                      #str --> byte --> add na lista
+        for i in range(4):                      #str --> int UNICODE --> add na lista
                 for j in range(4):
                         x = lista[i][j]
                         #x = int.from_bytes(x,"big")
                         x = ord(x)
                         lista[i][j] = x
         return lista
-########################################################################################################
+
 def addRoundKey(listaChave,listaTexto):         #Bitwise XOR entre bytes
         def bitwise_xor_bytes(a, b):
-#               result_int = int.from_bytes(a, byteorder="big") ^ int.from_bytes(b, byteorder="big")
                 result_int = a ^ b
-#               return result_int.to_bytes(max(len(a), len(b)), byteorder="big")
                 return result_int
 
         for i in range(4):
                 for j in range(4):
                         listaTexto[i][j] = bitwise_xor_bytes(listaChave[i][j],listaTexto[i][j])
-#                       listaTexto[i][j].hex()
         return listaTexto
-#######################################################################################################
+
 def subBytes(listaRodada):
-        for i in range(4):                      #byte --> int --> Pega o index na lista --> add na lista como int --> byte
+        for i in range(4):                      #byte --> int --> Pega o index na lista --> add na lista como int (em python bytes e hexas sao formas de visualizacao
                 for j in range(4):
                         x = listaRodada[i][j]
                         x = s_box[x]
@@ -101,39 +101,70 @@ def gmul(a, b):
 def printHex(val):
     return print('{:02x}'.format(val), end=' ')
 
+def keySchedule(listaKey2):
+        def subBytesRow(listaKey2):
+                newKey = [[0 for x in range(4)] for x in range(4)]
 
-listaVideo = [[0x19,0x3d,0xe3,0xbe],[0xa0,0xf4,0xe2,0x2b],[0x9a,0xc6,0x8d,0x2a],[0xe9,0xf8,0x48,0x08]]  #BOTAR A MATRIZ DOS ROUNDS AQUI !!!
-#listaVideo = [['A','B','C','D'],['E','F','G','H'],['I','J','K','L'],['M','N','O','P']]
-#listaVideo = conversaoLista2Byte(listaVideo)
-print(listaVideo)
+                aux = listaKey2[3][0]                   #Nova RotWord para chave
+                newKey[3][0] = listaKey2[3][1]
+                newKey[3][1] = listaKey2[3][2]
+                newKey[3][2] = listaKey2[3][3]
+                newKey[3][3] = aux
 
+                for j in range(4):                      #subRowBytes com s_box
+                        x = newKey[3][j]
+                        x = s_box[x]
+                        newKey[3][j] = x
+
+                for i in range(4):
+                        for j in range(4):
+                                if (i==0):
+                                        newKey[0][j] = listaKey2[0][j] ^ newKey[3][j] ^ rcon[j]
+                                else:
+                                        newKey[i][j] = listaKey2[i][j] ^ newKey[i-1][j]
+                for i in range(4): rcon.pop(0)
+                return newKey
+        return subBytesRow(listaKey2)
+
+
+
+
+listaVideo = 'RODRIGO MAMEDIOO'                                         #MENSAGEM DE 128 BITS DE TAMANHO
+listaVideo = matrixGenerator(listaVideo)
+listaVideo = conversaoLista2Byte(listaVideo)
 for i in range(4):
-        for j in range(4):
-                printHex(listaVideo[i][j])
+      for j in range(4):
+              printHex(listaVideo[i][j])
 print()
-listaVideo = subBytes(listaVideo)
-for i in range(4):
-        for j in range(4):
-                printHex(listaVideo[i][j])
-print()
 
-listaVideo = shiftRows(listaVideo)
-for i in range(4):
-        for j in range(4):
-                printHex(listaVideo[i][j])
-print()
+listaKey = aesKeyGenerator()
+print(listaKey)
+listaKey = matrixGenerator(listaKey)
+listaKey = conversaoLista2Byte(listaKey)
+listaVideo = addRoundKey(listaKey,listaVideo)                           #SubBytes com chave antes dos Rounds
 
-for i in range(4):
-        mixColumns(listaVideo[i][0],listaVideo[i][1],listaVideo[i][2],listaVideo[i][3])
+for qtd in range(10):
+        if(qtd==9):
+                listaVideo = subBytes(listaVideo)
+                listaVideo = shiftRows(listaVideo)
+                listaKey = keySchedule(listaKey)
+                listaVideo = addRoundKey(listaKey, listaVideo)
+                for i in range(4):
+                        for j in range(4):
+                                printHex(listaVideo[i][j])
+                print()
+        else:
+                listaVideo = subBytes(listaVideo)
+                listaVideo = shiftRows(listaVideo)
 
-for i in range(4):
-        for j in range(4):
-                printHex(listaVideo[i][j])
-print()
-#### ROUNDKEY ####
-listaKey = [[0xa0,0xfa,0xfe,0x17],[0x88,0x54,0x2c,0xb1],[0x23,0xa3,0x39,0x39],[0x2a,0x6c,0x76,0x05]]
-listaVideo = addRoundKey(listaKey,listaVideo)
+                for i in range(4):
+                        mixColumns(listaVideo[i][0],listaVideo[i][1],listaVideo[i][2],listaVideo[i][3])
 
-for i in range(4):
-        for j in range(4):
-                printHex(listaVideo[i][j])
+                listaKey = keySchedule(listaKey)
+                listaVideo = addRoundKey(listaKey, listaVideo)
+
+                for i in range(4):
+                        for j in range(4):
+                                printHex(listaVideo[i][j])
+                print()
+ 
