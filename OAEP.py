@@ -48,6 +48,14 @@ def oaep_encrypt(m1):
     y = xor(b_r, H_hash(bytearray(x)))
     return itos(x+y)
 
+def oaep_decrypt(c):
+    ind = int(G/8)
+    x = stoi(c[:ind])
+    y = stoi(c[ind:])
+    r = xor(H_hash(bytearray(x)), y)
+    m1 = xor(G_hash(bytearray(r)), x)
+    return bytearray(m1[:16]).decode()
+
 def stoi(s):
     return [ord(c) for c in s]
 

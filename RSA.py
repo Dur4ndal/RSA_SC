@@ -86,7 +86,6 @@ def eCalculator(oDn):
         while True:
                 e = random.randrange(1,oDn)
                 if ((math.gcd(e,oDn)) == 1):
-                        #print(e)
                         return e
 
 
@@ -121,7 +120,7 @@ def cifracao(chave, textoplano):
         #Abertura da tupla
         key,n = chave
         #Conversao por a^b mod m
-        cifra = [pow(ord(char),key,n) for char in textoplano]
+        cifra = [pow(i,key,n) for i in textoplano]
         return cifra
 
 
@@ -130,65 +129,17 @@ def decifracao(chave, textocifrado):
         #Abertura da tupla
         key,n = chave
         #Conversao das letras cifradas baseada na chave
-        tmp = [str(pow(char,key,n)) for char in textocifrado]
-        textoplano = [chr(int(char2)) for char2 in tmp]
-        return ''.join(textoplano)
+        return bytearray([pow(i, key, n) for i in textocifrado])
+
+def tob64(a):
+    b_a = bytearray()
+    for i in a:
+        ba = bytearray()
+        while i:
+            ba.append(i & 0xFF)
+            i >>= 8
+        b_a += ba
+    return b_a.decode('latin-1')
 
 
-################################ main ####################################
-#Quantidade de primos desejados para o teste de baixo primo
-#qtdPrimos = 1000
-#sieveEratosThenes(qtdPrimos)
 
-#Gerando chave publica ---> ARRUMAR AQUI PARA P e Q NUNCA SEREM IGUAIS !!!!!!!!!!!!!!!
-#p = peqGenerator()
-#q = peqGenerator()
-
-#print("P escolhido foi")
-#print(p)
-#print("Q escolhido foi")
-#print(q)
-#Calculo de oDn
-#n = p*q
-
-#print("N calculado foi:")
-#print(n)
-
-#oDn = (p - 1)*(q - 1)
-
-#print("O(n) calculado foi:")
-#print(oDn)
-
-#Calculo da chave publica E
-#e = eCalculator(oDn)
-
-#print("E calculado foi:")
-#print(e)
-
-#Calculo da chave privada D
-#d = dCalculator(e,oDn)
-
-
-#Chave privada e publica (d,n) e (e,n), respectivamente
-#chvPriv = (d,n)
-#chvPubl = (e,n)
-
-#print(chvPriv,chvPubl)
-#print("A chave publica e:")
-#print(chvPubl)
-
-#print("A chave privada e:")
-#print(chvPriv)
-
-#msg = input("Digite a mensagem:\n")
-#msgCifrada = cifracao(chvPubl,msg)
-
-#print(msgCifrada)
-#print(" - Sua mensagem cifrada e:  ", ''.join(map(lambda x: str(x), msgCifrada)))
-
-#msgDecifrada = decifracao(chvPriv,msgCifrada)
-
-#print(msgDecifrada)
-
-##################
-#print(aesKeyGenerator())
