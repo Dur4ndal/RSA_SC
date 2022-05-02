@@ -29,10 +29,12 @@ chvPubl = (e,n)
 
 ############chvSess = aesKeyGenerator()
 
-msg = input("Digite a mensagem:\n")
+#msg = input("Digite a mensagem:\n")
+msg = open('texto.txt', 'r').read() 
+print('Conteúdo do arquivo:')
+print(msg)
 c_key = AES.chvSess
 c_key = oaep_encrypt(c_key) #Cifracao assimetrica da chave de sessao
-print()
 print('Chave de sessao cifrada com RSA-OAEP')
 print(c_key)
 #TODO Cifracao simetrica da mensagem AES CTR
