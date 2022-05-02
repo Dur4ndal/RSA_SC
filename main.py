@@ -1,63 +1,60 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 from RSA import *
+from OAEP import oaep_encrypt, oaep_decrypt
+import base64
+import hashlib
+import AES
 
-
+#Parte I: Geracao de chaves e cifra simetrica
 qtdPrimos = 1000                                        #Qtd de primos para teste de Erator Thenes
 sieveEratosThenes(qtdPrimos)
 
 
 p = peqGenerator()                                      #Gera 2 tuplas com chaves publicas e privadas
 while True:                                             #Loop para evitar p e q iguais
-        q = peqGenerator()
-        if (p != q):
-                break
-
-print("P escolhido foi")
-print(p)
-print("Q escolhido foi")
-print(q)
-
+    q = peqGenerator()
+    if (p != q):
+        break
 #Calculo de oDn
 n = p*q
-
-print("N calculado foi:")
-print(n)
-
 oDn = (p - 1)*(q - 1)
-
-print("O(n) calculado foi:")
-print(oDn)
 
 #Calculo da chave publica E
 e = eCalculator(oDn)
-
-print("E calculado foi:")
-print(e)
-
 #Calculo da chave privada D
 d = dCalculator(e,oDn)
 
-
-#Chave privada e publica (d,n) e (e,n), respectivamente
 chvPriv = (d,n)
 chvPubl = (e,n)
 
-print(chvPriv,chvPubl)
-print("A chave publica e:")
-print(chvPubl)
-
-print("A chave privada e:")
-print(chvPriv)
+############chvSess = aesKeyGenerator()
 
 msg = input("Digite a mensagem:\n")
-msgCifrada = cifracao(chvPubl,msg)
+c_key = AES.chvSess
+c_key = oaep_encrypt(c_key) #Cifracao assimetrica da chave de sessao
+#TODO Cifracao simetrica da mensagem AES CTR
 
-#print(msgCifrada)
-print(" - Sua mensagem cifrada e:  ", ''.join(map(lambda x: str(x), msgCifrada)))
+#Parte II: Assinatura
+sha3 = hashlib.sha3_256()
+sha3.update(msg.encode())
+msg_hash = sha3.digest()
+#print(msg_hash)
+msgCifrada = cifracao(chvPubl,msg_hash.decode('latin-1')) #Calculo e cifracao de hash da mensagem
 
-msgDecifrada = decifracao(chvPriv,msgCifrada)
+#print("Assinatura: " + tob64(msgCifrada) + '\n')
 
-print(msgDecifrada)
+#Parte III: Verificacao
 
-##################
-print(aesKeyGenerator())
+msgDecifrada = decifracao(chvPriv,msgCifrada) #Decifracao do hash da mensagem
+
+#Testes de adulteração das mensagens
+#msgCifrada.pop()
+#msgDecifrada.append(0)
+
+flg_verificado = msg_hash == msgDecifrada #Checka se assinatura bate
+print('A assinatura é ', end='')
+if flg_verificado:
+    print('válida.')
+else:
+    print('inválida.')
+   
