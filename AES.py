@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import random, secrets, string                  #A biblio "secrets" esta sendo usada APENAS para a geracao randomica de uma string para ser usada como K
-
+from OAEP import oaep_encrypt
                                                 #10 rounds para uma chave de 128 bits de tamanho
 s_box = [0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
         0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -101,103 +101,163 @@ def gmul(a, b):
 def printHex(val):
     return print('{:02x}'.format(val), end=' ')
 
-def keySchedule(listaKey2):
-        def subBytesRow(listaKey2):
+def keySchedule(listaKey2,qtd):
+        def subBytesRow(listaKey2,qtd):
                 newKey = [[0 for x in range(4)] for x in range(4)]
-
                 aux = listaKey2[3][0]                   #Nova RotWord para chave
                 newKey[3][0] = listaKey2[3][1]
                 newKey[3][1] = listaKey2[3][2]
                 newKey[3][2] = listaKey2[3][3]
                 newKey[3][3] = aux
-
                 for j in range(4):                      #subRowBytes com s_box
                         x = newKey[3][j]
                         x = s_box[x]
                         newKey[3][j] = x
-
+####################################################################################################################################################################################################
                 for i in range(4):
                         for j in range(4):
-                                if (i==0):
-                                        newKey[0][j] = listaKey2[0][j] ^ newKey[3][j] ^ rcon[j]
+                                if(i==0):
+                                        if(j==0):
+                                                newKey[0][j] = listaKey2[0][j] ^ newKey[3][j] ^ rcon[qtd*4]
+                                        else:
+                                                newKey[0][j] = listaKey2[0][j] ^ newKey[3][j]
                                 else:
                                         newKey[i][j] = listaKey2[i][j] ^ newKey[i-1][j]
-                for i in range(4): rcon.pop(0)
+####################################################################################################################################################################################################
                 return newKey
-        return subBytesRow(listaKey2)
+        return subBytesRow(listaKey2,qtd)
 
+def split(word):
+        return [char for char in word]
+
+def fileManager():
+        arq = open("texto.txt","r")
+        conteudo = arq.read()
+        conteudo = split(conteudo)
+        while True:
+                if (len(conteudo) % 16 != 0):
+                        conteudo.append('0')
+                else:
+                        break
+        return conteudo
 
 ############################ MAIN ######################################################
+conteudo = fileManager()
+valorCTR = int((len(conteudo) / 16))
+##################################################################################
 #mensagemClara = [[0 for x in range(4)] for x in range(4)]
-mensagemClara='RODRIGO MAMEDIOO'
-print('TEXTO PLANO')
-print(mensagemClara)
+#mensagemClara='RODRIGO MAMEDIOO'
+#print('TEXTO PLANO')
+#print(mensagemClara)
 
-mensagemClara = matrixGenerator(mensagemClara)
-mensagemClara = conversaoLista2Byte(mensagemClara)
-for i in range(4):
-        for j in range(4):
-                printHex(mensagemClara[i][j])
-print()
-print()
-
+#mensagemClara = matrixGenerator(mensagemClara)
+#mensagemClara = conversaoLista2Byte(mensagemClara)
+#for i in range(4):
+#        for j in range(4):
+#                printHex(mensagemClara[i][j])
+#print()
+#print()
 #################################################################
-listaVideo = aesKeyGenerator()
-print('VetorBASE')
-print(listaVideo)                                         #MENSAGEM DE 128 BITS DE TAMANHO
-listaVideo = matrixGenerator(listaVideo)
-listaVideo = conversaoLista2Byte(listaVideo)
-
-ctr = [[0 for x in range(4)] for x in range(4)]
-for i in range(2,4):                                            #PARA FAZER A PROVA REAL DO FUNCIONAMENTO DO AES, COMENTE ESSE LOOP -> ADD 8 BYTES DE CTR
-        for j in range(4):
-                listaVideo[i][j] = ctr[i][j]
-for i in range(4):
-      for j in range(4):
-              printHex(listaVideo[i][j])
-print()
-print()
-#################################################################
-listaKey = aesKeyGenerator()
+print('---------- Implementacao RSA - 128 BITS, modo CTR ----------')
+chvSess = aesKeyGenerator()                                                     #CHAVE DE SESSAO GERADA NO AES para OAEP
+#listaKey2 = oaep_encrypt(aesKeyGenerator())
+listaKey2 = chvSess
 print('Chave')
-print(listaKey)
-listaKey = matrixGenerator(listaKey)
-listaKey = conversaoLista2Byte(listaKey)
+print(listaKey2)
+listaKey2 = matrixGenerator(listaKey2)
+listaKey2 = conversaoLista2Byte(listaKey2)
+#listaKey2 = listaKey
 for i in range(4):
         for j in range(4):
-                printHex(listaKey[i][j])
+                printHex(listaKey2[i][j])
 print()
 print()
 #################################################################
-listaVideo = addRoundKey(listaKey,listaVideo)                           #SubBytes com chave antes dos Rounds
+listaVideo2 = aesKeyGenerator()
+print('VetorBase')
+print(listaVideo2)
+listaVideo2 = matrixGenerator(listaVideo2)
+listaVideo2 = conversaoLista2Byte(listaVideo2)
+#listaVideo2 = listaVideo
+ctr = [[0 for x in range(4)] for x in range(4)]
+mensagemClara = [[0 for x in range(4)] for x in range(4)]
+aux=0
+listaVideo = [[0 for x in range(4)] for x in range(4)]
+listaKey = [[0 for x in range(4)] for x in range(4)]
 
-for qtd in range(10):
-        if(qtd==9):
-                listaVideo = subBytes(listaVideo)
-                listaVideo = shiftRows(listaVideo)
-                listaKey = keySchedule(listaKey)
-                listaVideo = addRoundKey(listaKey, listaVideo)
-                print('Resultado antes do XOR com texto plano')
-                for i in range(4):
-                        for j in range(4):
-                                printHex(listaVideo[i][j])
-                print()
-                print()
-        else:
-                listaVideo = subBytes(listaVideo)
-                listaVideo = shiftRows(listaVideo)
+for i in range(valorCTR):
+        for ii in range(4):
+                for j in range(4):
+                        listaVideo[ii][j] = listaVideo2[ii][j]
+                        listaKey[ii][j] = listaKey2[ii][j]
+        ##listaVideo = listaVideo2
+        ##listaKey = listaKey2
+        ctr[3][3] += i
+        #listaVideo = aesKeyGenerator()
+        print('VetorBASE')
+        #print(listaVideo)                                         #MENSAGEM DE 128 BITS DE TAMANHO
+        #listaVideo = matrixGenerator(listaVideo)
+        #listaVideo = conversaoLista2Byte(listaVideo)
 
-                for i in range(4):
-                        mixColumns(listaVideo[i][0],listaVideo[i][1],listaVideo[i][2],listaVideo[i][3])
+        #ctr = [[0 for x in range(4)] for x in range(4)]                        # VETOR CTR PARA FAZER A SOMA !!!!!!!!!!!!!!!!!!
 
-                listaKey = keySchedule(listaKey)
-                listaVideo = addRoundKey(listaKey, listaVideo)
+        for i in range(2,4):                                            #PARA FAZER A PROVA REAL DO FUNCIONAMENTO DO AES, COMENTE ESSE LOOP -> ADD 8 BYTES DE CTR
+                for j in range(4):
+                        listaVideo[i][j] = ctr[i][j]
+        for i in range(4):
+              for j in range(4):
+                      printHex(listaVideo[i][j])
+        print()
+        print()
+        #################################################################
+        listaVideo = addRoundKey(listaKey,listaVideo)                           #SubBytes com chave antes dos Rounds
 
+        for qtd in range(10):
+                if(qtd==9):
+                        listaVideo = subBytes(listaVideo)
+                        listaVideo = shiftRows(listaVideo)
+                        listaKey = keySchedule(listaKey,qtd)                    #QTD AQ
+                        listaVideo = addRoundKey(listaKey, listaVideo)
+                        print('Resultado antes do XOR com texto plano')
+                        for i in range(4):
+                                for j in range(4):
+                                        printHex(listaVideo[i][j])
+                        print()
+                        print()
+                else:
+                        listaVideo = subBytes(listaVideo)
+                        listaVideo = shiftRows(listaVideo)
 
-listaVideo = addRoundKey(mensagemClara,listaVideo)
-print('AES-128 - CTR')
-for i in range(4):
-        for j in range(4):
-                printHex(listaVideo[i][j])
-print()
-print()
+                        for i in range(4):
+                                mixColumns(listaVideo[i][0],listaVideo[i][1],listaVideo[i][2],listaVideo[i][3])
+
+                        listaKey = keySchedule(listaKey,qtd)                    #QTD AQ
+                        listaVideo = addRoundKey(listaKey, listaVideo)
+
+        #################################################################
+        #mensagemClara = [[0 for x in range(4)] for x in range(4)]
+        #aux = 0
+        for i in range(4):
+                for j in range(4):
+                        mensagemClara[i][j] = conteudo[aux]
+                        aux += 1
+        #mensagemClara='RODRIGO MAMEDIOO'
+        print('TEXTO PLANO')
+        print(mensagemClara)
+
+        #mensagemClara = matrixGenerator(mensagemClara)
+        mensagemClara = conversaoLista2Byte(mensagemClara)
+        for i in range(4):
+                for j in range(4):
+                        printHex(mensagemClara[i][j])
+        print()
+        print()
+        #################################################################
+        listaVideo = addRoundKey(mensagemClara,listaVideo)
+        print('AES-128 - CTR')
+        for i in range(4):
+                for j in range(4):
+                        printHex(listaVideo[i][j])
+        print()
+        print('---------------------------------')
+ 
