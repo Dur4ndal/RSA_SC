@@ -32,6 +32,9 @@ chvPubl = (e,n)
 msg = input("Digite a mensagem:\n")
 c_key = AES.chvSess
 c_key = oaep_encrypt(c_key) #Cifracao assimetrica da chave de sessao
+print()
+print('Chave de sessao cifrada com RSA-OAEP')
+print(c_key)
 #TODO Cifracao simetrica da mensagem AES CTR
 
 #Parte II: Assinatura
@@ -46,15 +49,17 @@ msgCifrada = cifracao(chvPubl,msg_hash.decode('latin-1')) #Calculo e cifracao de
 #Parte III: Verificacao
 
 msgDecifrada = decifracao(chvPriv,msgCifrada) #Decifracao do hash da mensagem
-
+print()
+print('Chave de sessao decifrada por RSA-OAEP')
+print(oaep_decrypt(c_key))
 #Testes de adulteração das mensagens
 #msgCifrada.pop()
 #msgDecifrada.append(0)
 
-flg_verificado = msg_hash == msgDecifrada #Checka se assinatura bate
+flg_verificado = msg_hash == msgDecifrada.encode('latin-1') #Checka se assinatura bate
 print('A assinatura é ', end='')
 if flg_verificado:
     print('válida.')
 else:
     print('inválida.')
-   
+  
